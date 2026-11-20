@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#1f4e9c">
+<title>Plume — orthographe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: joueur, encourageant, jamais moqueur — un collégien de 6e.
+   IDEA: un cahier d'écolier à grands carreaux, avec gommettes et tampons de récompense.
+   PICTURE: la carte-question au centre, comme une page de cahier (lignes Seyès, marge rouge).
+   COLOUR: bleu encre #1f4e9c dominant, papier blanc, marge rouge #e2453c, gommette jaune #ffc83d pour les points.
+   TYPE: Baloo 2 (titres, chiffres) + Nunito (texte). LAYOUT: une colonne, gros boutons tactiles. */
+:root{color-scheme:light dark;
+--bg:light-dark(#eaf1fb,#0f1a2e);--paper:light-dark(#ffffff,#16233b);--ink:light-dark(#14213d,#e8eefb);
+--soft:light-dark(#5b6b88,#9fb0cf);--blue:light-dark(#1f4e9c,#7fa8ff);--line:light-dark(#cfdcf3,#263a5e);
+--red:#e2453c;--yellow:#ffc83d;--green:light-dark(#1d8a4e,#4fd18b);--bad:light-dark(#c8352d,#ff7a72)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 Nunito,system-ui,sans-serif;overflow-x:clip;-webkit-tap-highlight-color:transparent}
+h1,h2,h3,.big{font-family:"Baloo 2",system-ui,sans-serif;line-height:1.1;margin:0}
+.wrap{max-width:560px;margin:0 auto;padding:14px 14px 40px}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.logo{font-size:30px;color:var(--blue);font-weight:800}
+.logo small{display:block;font:700 13px Nunito,system-ui,sans-serif;color:var(--soft)}
+.wallet{display:flex;align-items:center;gap:8px;background:var(--paper);border-radius:999px;padding:6px 14px 6px 6px;box-shadow:0 2px 0 var(--line)}
+.dot{width:34px;height:34px;border-radius:50%;background:var(--yellow);display:grid;place-items:center;font:800 15px "Baloo 2",system-ui,sans-serif;color:#5a3d00;box-shadow:inset 0 -3px 0 #e0a600}
+.wallet b{font:800 22px "Baloo 2",system-ui,sans-serif}
+.page{background:var(--paper);border-radius:18px;padding:22px 18px 22px 30px;position:relative;
+ background-image:linear-gradient(90deg,transparent 18px,var(--red) 18px,var(--red) 20px,transparent 20px),repeating-linear-gradient(transparent 0 31px,var(--line) 31px 32px);
+ box-shadow:0 3px 0 var(--line),0 10px 30px rgba(20,33,61,.08);margin-bottom:14px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.btn{appearance:none;border:0;border-radius:14px;min-height:52px;padding:10px 16px;font:800 18px Nunito,system-ui,sans-serif;cursor:pointer;background:var(--blue);color:#fff;box-shadow:0 4px 0 rgba(0,0,0,.25);transition:transform .08s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.25)}
+.btn:focus-visible,.choice:focus-visible,input:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+.btn.ghost{background:transparent;color:var(--blue);box-shadow:inset 0 0 0 2px var(--blue)}
+.btn.y{background:var(--yellow);color:#4a3200}
+.btn.full{width:100%}
+.btn[disabled]{opacity:.45}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0}
+.stat{background:var(--paper);border-radius:14px;padding:10px;text-align:center}
+.stat .big{font-size:26px;color:var(--blue)}
+.stat span{font-size:13px;color:var(--soft)}
+.themes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.theme{background:var(--paper);border:0;border-radius:14px;padding:12px;text-align:left;font:inherit;color:inherit;cursor:pointer;min-height:64px;box-shadow:0 2px 0 var(--line)}
+.theme b{display:block;font-size:15px}
+.bar{height:8px;border-radius:9px;background:var(--line);margin-top:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--green)}
+.q-top{display:flex;justify-content:space-between;font-size:14px;color:var(--soft);font-weight:700;margin-bottom:6px}
+.prog{height:10px;border-radius:9px;background:var(--line);overflow:hidden;margin-bottom:16px}
+.prog i{display:block;height:100%;background:var(--blue);transition:width .3s}
+.sentence{font-size:23px;font-weight:700;line-height:32px;margin:6px 0 18px}
+.gap{display:inline-block;min-width:70px;border-bottom:3px solid var(--blue);color:var(--blue);text-align:center}
+.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.choice{min-height:58px;border-radius:14px;border:2px solid var(--line);background:var(--paper);color:var(--ink);font:800 20px Nunito,system-ui,sans-serif;cursor:pointer}
+.choice.ok{background:var(--green);border-color:var(--green);color:#fff}
+.choice.ko{background:var(--bad);border-color:var(--bad);color:#fff}
+.explain{margin-top:16px;border-radius:14px;padding:12px 14px;background:light-dark(#f2f6ff,#1c2c4a);border-left:5px solid var(--blue)}
+.explain.good{border-color:var(--green)}.explain.bad{border-color:var(--bad)}
+.explain b{display:block;margin-bottom:4px}
+.pop{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%) scale(.6);opacity:0;font:800 44px "Baloo 2",system-ui,sans-serif;color:var(--yellow);text-shadow:0 3px 0 #b07a00;pointer-events:none}
+.pop.go{animation:pop .9s ease-out}
+@keyframes pop{30%{opacity:1;transform:translate(-50%,-60%) scale(1.1)}100%{opacity:0;transform:translate(-50%,-110%) scale(1)}}
+@media(prefers-reduced-motion:reduce){.pop.go{animation:none}.prog i{transition:none}}
+.stamp{font:800 34px "Baloo 2",system-ui,sans-serif;color:var(--red);border:4px solid var(--red);border-radius:12px;display:inline-block;padding:2px 14px;transform:rotate(-6deg);margin:6px 0 12px}
+.muted{color:var(--soft);font-size:14px}
+label{display:block;font-weight:700;margin:10px 0 4px}
+input{font:700 18px Nunito,system-ui,sans-serif;width:100%;min-height:48px;border-radius:12px;border:2px solid var(--line);padding:8px 12px;background:var(--paper);color:var(--ink)}
+table{width:100%;border-collapse:collapse;font-size:15px}td,th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:left}td.n{text-align:right;white-space:nowrap}
+.hidden{display:none}
+.lvl{display:inline-block;background:var(--blue);color:#fff;border-radius:999px;padding:2px 10px;font-weight:800;font-size:13px}
+textarea{width:100%;min-height:90px;font:14px monospace;border-radius:12px;border:2px solid var(--line);background:var(--paper);color:var(--ink);padding:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">Plume<small>orthographe &amp; grammaire · 6e</small></div>
+    <div class="wallet" title="Points"><div class="dot">pts</div><b id="w-pts">0</b></div>
+  </header>
+
+  <!-- ACCUEIL -->
+  <section id="home">
+    <div class="page">
+      <h2 style="font-size:28px" id="h-hello">Salut&nbsp;!</h2><p style="margin:4px 0 0"><span id="h-lvl" class="lvl"></span></p>
+      <p style="margin:6px 0 14px">Une série = 10 questions. Bonne réponse du premier coup&nbsp;: <b>+10&nbsp;pts</b>. Série de 5 bonnes réponses d'affilée&nbsp;: <b>+5 bonus</b>. Sans-faute&nbsp;: <b>+20</b>.</p>
+      <button class="btn full" id="go-mix">Jouer — mélange malin</button>
+      <p class="muted" id="h-cap" style="margin:10px 0 0"></p>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="big" id="s-days">0</div><span>jours d'affilée</span></div>
+      <div class="stat"><div class="big" id="s-today">0</div><span>pts aujourd'hui</span></div>
+      <div class="stat"><div class="big" id="s-min">0</div><span>min de console</span></div>
+    </div>
+    <h3 style="margin:16px 0 8px">Ou choisis un thème</h3>
+    <div class="themes" id="themes"></div>
+    <div class="row" style="margin-top:16px">
+      <button class="btn y" id="go-shop" style="flex:1">Échanger mes points</button>
+      <button class="btn ghost" id="go-parent" style="flex:1">Espace parent</button>
+    </div>
+  </section>
+
+  <!-- PREMIER LANCEMENT -->
+  <section id="hello" class="hidden">
+    <div class="page">
+      <h2 style="font-size:28px">Bienvenue, recrue&nbsp;!</h2>
+      <p>Ta mission&nbsp;: devenir un héros de l'orthographe. Chaque bonne réponse te rapporte des points, échangeables contre du temps de console.</p>
+      <label for="hl-name">Comment tu t'appelles&nbsp;?</label>
+      <input id="hl-name" maxlength="20" autocomplete="off">
+      <button class="btn full" id="hl-go" style="margin-top:12px">C'est parti&nbsp;!</button>
+    </div>
+  </section>
+
+  <!-- QUESTION -->
+  <section id="quiz" class="hidden">
+    <div class="page">
+      <div class="q-top"><span id="q-theme"></span><span id="q-count"></span></div>
+      <div class="prog"><i id="q-prog" style="width:0"></i></div>
+      <div class="sentence" id="q-sentence"></div>
+      <div class="choices" id="q-choices"></div>
+      <div id="q-explain"></div>
+      <button class="btn full hidden" id="q-next" style="margin-top:14px">Suivant</button>
+    </div>
+    <button class="btn ghost full" id="q-quit">Arrêter la série</button>
+  </section>
+
+  <!-- FIN DE SÉRIE -->
+  <section id="end" class="hidden">
+    <div class="page" style="text-align:center">
+      <div class="stamp" id="e-stamp">Bravo&nbsp;!</div>
+      <p class="big" style="font-size:40px;color:var(--blue)" id="e-pts">+0 pts</p>
+      <p id="e-txt"></p>
+      <div id="e-errs" style="text-align:left"></div>
+      <button class="btn full" id="e-again" style="margin-top:12px">Encore une série</button>
+      <button class="btn ghost full" id="e-home" style="margin-top:10px">Accueil</button>
+    </div>
+  </section>
+
+  <!-- BOUTIQUE -->
+  <section id="shop" class="hidden">
+    <div class="page">
+      <h2 style="font-size:26px">Temps de console</h2>
+      <p id="sh-rate"></p>
+      <p class="big" style="font-size:34px;color:var(--blue)" id="sh-bal"></p>
+      <p class="muted">L'échange se valide avec le code d'un parent.</p>
+      <label for="sh-pin">Code parent</label>
+      <input id="sh-pin" type="password" inputmode="numeric" maxlength="6" autocomplete="off">
+      <button class="btn y full" id="sh-do" style="margin-top:12px">Échanger</button>
+      <p id="sh-msg" style="font-weight:800"></p>
+      <h3 style="margin-top:14px">Historique</h3>
+      <table id="sh-hist"></table>
+    </div>
+    <button class="btn ghost full" data-home>Retour</button>
+  </section>
+
+  <!-- PARENT -->
+  <section id="parent" class="hidden">
+    <div class="page" id="p-lock">
+      <h2 style="font-size:26px">Espace parent</h2>
+      <p id="p-first" class="muted"></p>
+      <label for="p-pin">Code parent</label>
+      <input id="p-pin" type="password" inputmode="numeric" maxlength="6" autocomplete="off">
+      <button class="btn full" id="p-open" style="margin-top:12px">Entrer</button>
+      <p id="p-msg" style="font-weight:800"></p>
+    </div>
+    <div id="p-body" class="hidden">
+      <div class="page">
+        <h2 style="font-size:24px">Réussite par thème</h2>
+        <table id="p-themes"></table>
+      </div>
+      <div class="page">
+        <h2 style="font-size:24px">Dernières erreurs</h2>
+        <div id="p-errs" class="muted"></div>
+      </div>
+      <div class="page">
+        <h2 style="font-size:24px">Réglages</h2>
+        <label for="p-rate">Minutes de console pour 100 points</label><input id="p-rate" type="number" min="1" max="120">
+        <label for="p-cap">Points maximum gagnés par jour</label><input id="p-cap" type="number" min="10" max="2000">
+        <label for="p-name">Prénom affiché</label><input id="p-name" maxlength="20">
+        <label for="p-newpin">Nouveau code parent (4 à 6 chiffres, laisser vide pour garder)</label><input id="p-newpin" type="password" inputmode="numeric" maxlength="6">
+        <button class="btn full" id="p-save" style="margin-top:12px">Enregistrer</button>
+        <p id="p-saved" style="font-weight:800"></p>
+      </div>
+      <div class="page">
+        <h2 style="font-size:24px">Sauvegarde</h2>
+        <p class="muted">La progression est gardée dans ce téléphone. Copie ce code pour la sauvegarder ou la transférer sur un autre appareil.</p>
+        <button class="btn ghost full" id="p-export">Afficher le code de sauvegarde</button>
+        <textarea id="p-code" class="hidden" readonly></textarea>
+        <label for="p-import">Restaurer depuis un code</label><textarea id="p-import"></textarea>
+        <button class="btn ghost full" id="p-doimport" style="margin-top:8px">Restaurer</button>
+        <p id="p-imsg" style="font-weight:800"></p>
+      </div>
+    </div>
+    <button class="btn ghost full" data-home>Retour</button>
+  </section>
+</div>
+<div class="pop" id="pop">+10</div>
+
+<script>
+{
+/* ---------- règles (affichées avec chaque correction) ---------- */
+const RULES={
+ aa:["a / à","« a » est le verbe avoir : on peut le remplacer par « avait ». Sinon, c'est « à »."],
+ et:["et / est","« est » est le verbe être : on peut le remplacer par « était ». « et » relie deux mots (= et puis)."],
+ son:["son / sont","« sont » est le verbe être : on peut le remplacer par « étaient ». « son » = le sien, on peut dire « mon »."],
+ on:["on / ont","« ont » est le verbe avoir : on peut le remplacer par « avaient ». « on » se remplace par « il »."],
+ ou:["ou / où","« ou » = ou bien (un choix). « où » indique un lieu ou un moment."],
+ ces:["ces / ses / c'est / s'est","« ses » = les siens ; « ces » = ceux-là (on montre) ; « c'est » = cela est ; « s'est » se trouve devant un verbe au participe passé (il s'est trompé)."],
+ gn:["Accords du groupe nominal","L'adjectif s'accorde en genre et en nombre avec le nom qu'il qualifie. Masculin + féminin = masculin pluriel."],
+ plu:["Pluriels particuliers","La plupart des mots en -al font -aux (sauf bal, festival, carnaval…), -eau / -au / -eu font -x (sauf pneu, bleu…), -ou fait -s (sauf bijou, caillou, chou, genou, hibou, joujou, pou), quelques -ail font -aux."],
+ sv:["Accord sujet-verbe","Le verbe s'accorde avec son sujet : cherche « qui est-ce qui ? » devant le verbe. Deux sujets = pluriel."],
+ er:["-er / -é / -ez","Remplace par « vendre / vendu / vendez » : vendre → -er, vendu → -é (accordé si besoin), vendez → -ez."],
+ pres:["Présent","Terminaisons : je -s / -e, tu -s, il -t / -e / -d, nous -ons, vous -ez, ils -ent. Attention aux verbes irréguliers."],
+ impfut:["Imparfait et futur","Imparfait : -ais, -ais, -ait, -ions, -iez, -aient. Futur : -rai, -ras, -ra, -rons, -rez, -ront."],
+ mots:["Mots à connaître","Les mots courants s'écrivent toujours pareil : il faut les apprendre. Astuces : chercher un mot de la même famille (forêt → forestier), repérer les lettres doubles et les lettres muettes."],
+ ps:["Passé simple","1er groupe : il -a, ils -èrent. 2e et beaucoup du 3e : il -it, ils -irent. Certains : il -ut, ils -urent (il eut, il fut)."]
+};
+/* ---------- banque d'exercices : [thème, phrase avec ___, choix, bonne réponse, astuce] ---------- */
+const B=[
+["aa","Iron Man ___ réparé son armure.",["a","à"],"a","Iron Man avait réparé → a."],
+["aa","Spider-Man saute ___ travers la ville.",["a","à"],"à","« saute avait travers » ne marche pas → à."],
+["aa","Hulk ___ une force incroyable.",["a","à"],"a","Hulk avait une force incroyable → a."],
+["aa","Captain America lance son bouclier ___ toute vitesse.",["a","à"],"à","« avait toute vitesse » ne marche pas → à."],
+["aa","Thor ___ perdu son marteau.",["a","à"],"a","Thor avait perdu → a."],
+["aa","Les Avengers se retrouvent ___ la tour Stark.",["a","à"],"à","« se retrouvent avait la tour » ne marche pas → à."],
+["aa","Il y ___ trop de bruit dans la classe.",["a","à"],"a","Il y avait trop de bruit → a."],
+["aa","Black Widow ___ un plan secret.",["a","à"],"a","Black Widow avait un plan → a."],
+["aa","Groot parle ___ Rocket.",["a","à"],"à","« parle avait Rocket » ne marche pas → à."],
+["aa","J'ai une boîte ___ chaussures sous mon lit.",["a","à"],"à","Une boîte « avait » chaussures ne veut rien dire → à."],
+["et","Hulk ___ très en colère.",["et","est"],"est","Hulk était en colère → est."],
+["et","Thor ___ Loki sont frères.",["et","est"],"et","Thor et puis Loki → et."],
+["et","Le bouclier de Captain America ___ rond.",["et","est"],"est","Le bouclier était rond → est."],
+["et","Spider-Man saute ___ il lance sa toile.",["et","est"],"et","Il saute et puis il lance → et."],
+["et","Où ___ le marteau de Thor ?",["et","est"],"est","Où était le marteau ? → est."],
+["et","Iron Man vole ___ Hulk court.",["et","est"],"et","Iron Man vole et puis Hulk court → et."],
+["et","Ce film ___ vraiment drôle.",["et","est"],"est","Ce film était drôle → est."],
+["et","Black Panther ___ le roi du Wakanda.",["et","est"],"est","Black Panther était le roi → est."],
+["et","Le gâteau ___ prêt.",["et","est"],"est","Le gâteau était prêt → est."],
+["et","J'ai pris un crayon ___ une gomme.",["et","est"],"et","Un crayon et puis une gomme → et."],
+["son","Les Avengers ___ prêts au combat.",["son","sont"],"sont","Les Avengers étaient prêts → sont."],
+["son","Thor brandit ___ marteau.",["son","sont"],"son","Thor brandit mon marteau : ça marche → son."],
+["son","Mes amis ___ arrivés en retard.",["son","sont"],"sont","Mes amis étaient arrivés → sont."],
+["son","Captain America a perdu ___ bouclier.",["son","sont"],"son","Il a perdu mon bouclier → son."],
+["son","Ces exercices ___ faciles.",["son","sont"],"sont","Ces exercices étaient faciles → sont."],
+["son","Spider-Man répare ___ costume.",["son","sont"],"son","Il répare mon costume → son."],
+["son","Où ___ passés les Gardiens de la Galaxie ?",["son","sont"],"sont","Où étaient passés les Gardiens ? → sont."],
+["son","Chacun prend ___ goûter.",["son","sont"],"son","Chacun prend mon goûter → son."],
+["on","Les Avengers ___ sauvé la ville.",["on","ont"],"ont","Les Avengers avaient sauvé → ont."],
+["on","___ part en vacances demain.",["On","Ont"],"On","Il part en vacances → On."],
+["on","Hulk et Thor ___ gagné le combat.",["on","ont"],"ont","Hulk et Thor avaient gagné → ont."],
+["on","___ entend Hulk crier de loin.",["On","Ont"],"On","Il entend Hulk crier → On."],
+["on","Est-ce qu'___ peut sortir ?",["on","ont"],"on","Est-ce qu'il peut sortir ? → on."],
+["on","Les méchants ___ peur de Captain America.",["on","ont"],"ont","Les méchants avaient peur → ont."],
+["on","Quand ___ travaille bien, on progresse.",["on","ont"],"on","Quand il travaille bien → on."],
+["on","Les oiseaux ___ construit un nid.",["on","ont"],"ont","Les oiseaux avaient construit → ont."],
+["ou","Tu préfères Iron Man ___ Captain America ?",["ou","où"],"ou","Iron Man ou bien Captain America → ou."],
+["ou","___ se cache Loki ?",["Ou","Où"],"Où","On demande un lieu → Où."],
+["ou","Le Wakanda est le pays ___ vit Black Panther.",["ou","où"],"où","C'est un lieu → où."],
+["ou","Veux-tu jouer dehors ___ dedans ?",["ou","où"],"ou","Dehors ou bien dedans → ou."],
+["ou","Je ne sais pas ___ j'ai mis mes clés.",["ou","où"],"où","À quel endroit → où."],
+["ou","Prends un stylo bleu ___ noir.",["ou","où"],"ou","Bleu ou bien noir → ou."],
+["ou","Le jour ___ Thanos est arrivé, tout a changé.",["ou","où"],"où","Un moment → où."],
+["ou","Lundi ___ mardi, je viendrai te voir.",["ou","où"],"ou","Lundi ou bien mardi → ou."],
+["ces","Iron Man range ___ armures dans son atelier.",["ces","ses","c'est","s'est"],"ses","Les siennes → ses."],
+["ces","Regarde ___ nuages, il va pleuvoir !",["ces","ses","c'est","s'est"],"ces","On les montre : ces nuages-là → ces."],
+["ces","___ mon super-héros préféré.",["Ces","Ses","C'est","S'est"],"C'est","Cela est mon super-héros préféré → C'est."],
+["ces","Spider-Man ___ caché sur le toit.",["ces","ses","c'est","s'est"],"s'est","Verbe « se cacher » : il s'est caché → s'est."],
+["ces","Hawkeye range ___ flèches dans son carquois.",["ces","ses","c'est","s'est"],"ses","Les siennes → ses."],
+["ces","___ chaussures-là sont trop petites.",["Ces","Ses","C'est","S'est"],"Ces","On montre : ces chaussures-là → Ces."],
+["ces","Bruce Banner ___ transformé en Hulk.",["ces","ses","c'est","s'est"],"s'est","Verbe « se transformer » : il s'est transformé → s'est."],
+["ces","___ facile quand on connaît la règle !",["Ces","Ses","C'est","S'est"],"C'est","Cela est facile → C'est."],
+["ces","Ma grand-mère arrose ___ fleurs chaque soir.",["ces","ses","c'est","s'est"],"ses","Les siennes → ses."],
+["ces","Qui a dessiné ___ belles affiches ?",["ces","ses","c'est","s'est"],"ces","Ces affiches-là → ces."],
+["gn","des armures ___",["brillant","brillants","brillante","brillantes"],"brillantes","Armures : féminin pluriel → brillantes."],
+["gn","une ___ idée",["bon","bonne","bons","bonnes"],"bonne","Idée : féminin singulier → bonne."],
+["gn","les ___ chevaux",["petit","petits","petite","petites"],"petits","Chevaux : masculin pluriel → petits."],
+["gn","une mission ___",["dangereux","dangereuse","dangereuses"],"dangereuse","Mission : féminin singulier → dangereuse."],
+["gn","des héroïnes ___",["courageux","courageuse","courageuses"],"courageuses","Héroïnes : féminin pluriel → courageuses."],
+["gn","des capes et des boucliers ___",["rouge","rouges"],"rouges","Plusieurs noms → pluriel : rouges."],
+["gn","une rue ___",["étroit","étroite","étroits","étroites"],"étroite","Rue : féminin singulier → étroite."],
+["gn","les ___ Avengers",["premier","premiers","première","premières"],"premiers","Avengers : masculin pluriel → premiers."],
+["gn","de ___ maisons",["beau","beaux","belle","belles"],"belles","Maisons : féminin pluriel → belles."],
+["gn","un ___ ami",["vieux","vieil","vieille","vieilles"],"vieil","Devant une voyelle, « vieux » devient « vieil » : un vieil ami."],
+["plu","un cheval → des ___",["chevals","chevaux","chevaus"],"chevaux","-al fait le plus souvent -aux."],
+["plu","un festival → des ___",["festivals","festivaux","festivaus"],"festivals","Exception : festival, bal, carnaval prennent un -s."],
+["plu","un bijou → des ___",["bijous","bijoux","bijou"],"bijoux","Bijou fait partie des 7 mots en -ou qui prennent un -x."],
+["plu","un trou → des ___",["trous","troux","trou"],"trous","La plupart des mots en -ou prennent un -s."],
+["plu","un jeu → des ___",["jeus","jeux","jeu"],"jeux","Les mots en -eu prennent un -x (sauf pneu, bleu…)."],
+["plu","un pneu → des ___",["pneus","pneux","pneu"],"pneus","Exception : pneu prend un -s."],
+["plu","un travail → des ___",["travails","travaux","travailx"],"travaux","Quelques mots en -ail font -aux : travail, corail, émail, vitrail…"],
+["plu","un détail → des ___",["détails","détaux","détailx"],"détails","La plupart des mots en -ail prennent un -s."],
+["plu","un bateau → des ___",["bateaus","bateaux","bateau"],"bateaux","Les mots en -eau prennent un -x."],
+["plu","un journal → des ___",["journals","journaux","journaus"],"journaux","-al fait le plus souvent -aux."],
+["sv","Les Avengers ___ la Terre.",["protège","protèges","protègent","protégeons"],"protègent","Sujet « les Avengers » = ils → protègent."],
+["sv","Thor et Loki ___ à Asgard.",["va","vont","vas","allons"],"vont","Deux sujets = ils → vont."],
+["sv","Tu ___ tes devoirs.",["fait","fais","faits","font"],"fais","Avec « tu », le verbe finit par -s → fais."],
+["sv","Le cri des monstres me ___ peur.",["fait","font","fais"],"fait","Qui est-ce qui fait peur ? Le cri (singulier) → fait."],
+["sv","Nous ___ le bus.",["prend","prenons","prennent","prends"],"prenons","Avec « nous » → -ons : prenons."],
+["sv","Les feuilles de l'arbre ___.",["tombe","tombent","tombes"],"tombent","Qui est-ce qui tombe ? Les feuilles (pluriel) → tombent."],
+["sv","Je les ___ dans la rue.",["voit","vois","voient","voie"],"vois","Le sujet est « je » (« les » n'est pas le sujet) → vois."],
+["sv","Vous ___ toujours en retard.",["êtes","est","sont","étes"],"êtes","Être avec « vous » → êtes (accent circonflexe)."],
+["sv","Chaque Avenger ___ un pouvoir.",["a","ont","as"],"a","« Chaque Avenger » est singulier → a."],
+["sv","Où ___ mes cousins ?",["est","sont","es"],"sont","Le sujet est après le verbe : mes cousins (pluriel) → sont."],
+["er","Iron Man doit ___ son armure.",["réparer","réparé","réparez"],"réparer","Il doit vendre → réparer."],
+["er","Hulk a ___ le mur.",["casser","cassé","cassez"],"cassé","Hulk a vendu → cassé."],
+["er","Vous ___ trop vite !",["parler","parlé","parlez"],"parlez","Vous vendez → parlez."],
+["er","Captain America va ___ son bouclier.",["lancer","lancé","lancez"],"lancer","Il va vendre → lancer."],
+["er","Nous avons ___ un film.",["regarder","regardé","regardez"],"regardé","Nous avons vendu → regardé."],
+["er","Spider-Man aime ___ entre les immeubles.",["sauter","sauté","sautez"],"sauter","Il aime vendre → sauter."],
+["er","Thor est ___ dans la salle.",["entrer","entré","entrez"],"entré","Thor est vendu → entré."],
+["er","Pouvez-vous ___ la porte ?",["fermer","fermé","fermez"],"fermer","Pouvez-vous vendre → fermer."],
+["er","Les méchants sont ___.",["arrêter","arrêté","arrêtés","arrêtez"],"arrêtés","Sont vendus → participe accordé avec « les méchants » : arrêtés."],
+["er","___ la fenêtre, s'il vous plaît.",["Fermer","Fermé","Fermez"],"Fermez","Vendez la fenêtre → impératif avec vous : Fermez."],
+["pres","Je ___ mes devoirs.",["finis","finit","fini","finie"],"finis","Finir (2e groupe) avec « je » → finis."],
+["pres","Spider-Man ___ vite.",["court","cour","cours","courre"],"court","Courir avec « il » → court."],
+["pres","Ils ___ partir.",["veulent","veule","veut","voulent"],"veulent","Vouloir avec « ils » → veulent."],
+["pres","Nous ___ au cinéma voir les Avengers.",["allons","allont","vont","allez"],"allons","Aller avec « nous » → allons."],
+["pres","Tu ___ la réponse.",["sait","sais","ses","sés"],"sais","Savoir avec « tu » → sais."],
+["pres","Loki ne ___ jamais la vérité.",["dit","dis","dits","die"],"dit","Dire avec « il » → dit."],
+["pres","Vous ___ des bêtises.",["dites","disez","dîtes","dite"],"dites","Dire avec « vous » → dites (comme vous faites, vous êtes)."],
+["pres","Je ___ le pain.",["prend","prends","prent","prens"],"prends","Prendre avec « je » → prends."],
+["pres","Hulk ___ peur à tout le monde.",["fait","fais","fet","faire"],"fait","Faire avec « il » → fait."],
+["pres","Elles ___ une lettre.",["écrivent","écrive","écrient","écrits"],"écrivent","Écrire avec « elles » → écrivent."],
+["impfut","Quand j'étais petit, je ___ au parc.",["jouais","jouait","jouai","jouerai"],"jouais","Imparfait avec « je » → -ais : jouais."],
+["impfut","Autrefois, nous ___ à la campagne.",["habitions","habitons","habitiont","habitâmes"],"habitions","Imparfait avec « nous » → -ions : habitions."],
+["impfut","Pendant le voyage, ils ___ dans le car.",["chantaient","chantait","chantais","chanteront"],"chantaient","Imparfait avec « ils » → -aient : chantaient."],
+["impfut","Avant, Bruce Banner ___ un savant tranquille.",["était","étais","étai","été"],"était","Être à l'imparfait avec « il » → était."],
+["impfut","Demain, je ___ le nouveau film de super-héros.",["verrai","voirai","verais","vois"],"verrai","Voir au futur : je verrai (radical irrégulier « ver- »)."],
+["impfut","En juillet, nous ___ en vacances.",["partirons","partiront","partirions","partons"],"partirons","Futur avec « nous » → -rons : partirons."],
+["impfut","Dimanche, il ___ beau.",["fera","ferra","faira","fait"],"fera","Faire au futur : il fera."],
+["impfut","Ce soir, vous ___ le train.",["prendrez","prendez","prenderez","prendriez"],"prendrez","Futur avec « vous » → -rez : prendrez."],
+["impfut","Demain, les Avengers ___ prêts.",["seront","serons","seraient","sont"],"seront","Être au futur avec « ils » → seront."],
+["impfut","Demain, tu ___ ta copie.",["rendras","rendra","rendrais","rendera"],"rendras","Futur avec « tu » → -ras : rendras."],
+["ps","Au passé simple : Thor ___ son marteau.",["prit","prenda","prena","prendit"],"prit","Prendre au passé simple : il prit."],
+["ps","Au passé simple : Ils ___ la mer pour la première fois.",["virent","voyèrent","voirent","vurent"],"virent","Voir au passé simple : ils virent."],
+["ps","Au passé simple : Black Widow ___ sans un mot.",["partit","parta","partut","partirent"],"partit","Partir au passé simple : elle partit."],
+["ps","Au passé simple : Les Avengers ___ vers le château.",["marchèrent","marchérent","marchairent","marchirent"],"marchèrent","1er groupe avec « ils » → -èrent (accent grave)."],
+["ps","Au passé simple : Le renard ___ au corbeau.",["parla","parlat","parlit","parlut"],"parla","1er groupe avec « il » → -a : parla."],
+["ps","Au passé simple : Loki ___ peur et s'enfuit.",["eut","eu","avit","avut"],"eut","Avoir au passé simple : il eut."],
+["ps","Au passé simple : Ils ___ très surpris.",["furent","fûrent","étèrent","sont"],"furent","Être au passé simple : ils furent (sans accent)."],
+["ps","Au passé simple : Iron Man ___ une grande découverte.",["fit","faisa","faisit","fut"],"fit","Faire au passé simple : il fit."],
+["mots","Spider-Man s'accroche à une ___.",["ficelle","fissel","ficèle","ficel"],"ficelle","Fi-celle : un c (qui fait « s » devant e) et -elle, comme dans poubelle."],
+["mots","Hulk mange ___ de crêpes.",["beaucoup","beaucou","boucoup","beaucoups"],"beaucoup","Beaucoup : « eau » au début et un p muet à la fin."],
+["mots","Captain America arrive ___ à l'heure.",["toujours","toujour","toujourt","tousjours"],"toujours","Toujours finit toujours par un s muet."],
+["mots","Iron Man part ___.",["maintenant","maintenent","mintenant","maintenan"],"maintenant","Main-te-nant : comme « la main », et -ant à la fin."],
+["mots","___, c'est mercredi.",["Aujourd'hui","Aujourdhui","Aujour d'hui","Aujourd'huit"],"Aujourd'hui","Aujourd'hui : un seul mot avec une apostrophe."],
+["mots","Thor attend depuis ___.",["longtemps","longtemp","lontemps","longtant"],"longtemps","Long + temps : on garde le g de long et le p, s de temps."],
+["mots","Black Widow a ___ amis.",["plusieurs","plusieur","plusieures","plusieurts"],"plusieurs","Plusieurs prend toujours un s, et ne change jamais : plusieurs filles, plusieurs garçons."],
+["mots","Hawkeye tire ___ dans le mille.",["souvent","souvant","souven"],"souvent","Souvent s'écrit avec « ent »."],
+["mots","Je suis ___ content !",["vraiment","vraiement","vrèment","vraimant"],"vraiment","Vrai + ment : pas de e entre les deux."],
+["mots","Hulk se fâche ___ on l'embête.",["quand","quant","kan","qand"],"quand","Quand (le moment) s'écrit avec qu… et un d."],
+["mots","Loki est ___ reparti.",["déjà","déja","dèja","dejà"],"déjà","Déjà : é au début, à à la fin."],
+["mots","Thanos est ___ fort.",["très","trés","tré","trais"],"très","Très : accent grave et s muet."],
+["mots","Spider-Man n'a ___ peur.",["jamais","jamai","jamès","jamait"],"jamais","Jamais finit par « ais »."],
+["mots","Iron Man a une ___ à faire.",["chose","choze","chause","chosse"],"chose","Chose : un seul s, qui fait « z » entre deux voyelles."],
+["mots","La ___ tombe sur New York.",["nuit","nui","nuis","nuie"],"nuit","Nuit : t muet (on l'entend dans « nuitée »)."],
+["mots","Black Panther protège sa ___.",["famille","famile","fammille","famie"],"famille","Famille : -ille, comme fille."],
+["mots","Captain America a écrit une ___.",["lettre","lètre","letre"],"lettre","Lettre : deux t, donc pas d'accent sur le e."],
+["mots","___ ne sait où est Loki.",["Personne","Persone","Pèrsonne","Perssonne"],"Personne","Personne : deux n."],
+["mots","Les Avengers combattent ___.",["ensemble","ensembe","emsemble","ansemble"],"ensemble","Ensemble : « en » au début, « em » devant b."],
+["mots","Ce combat est ___ !",["difficile","dificile","difficil","difisile"],"difficile","Difficile : deux f, et un e à la fin."],
+["mots","Cet exercice est ___.",["facile","fasile","facil","faccile"],"facile","Facile : un c (« s » devant i) et un e final."],
+["mots","Spider-Man est un ___ courageux.",["garçon","garcon","garsson"],"garçon","Cédille : ç fait « s » devant a, o, u."],
+["mots","J'apprends ma ___ de français.",["leçon","lecon","lesson"],"leçon","Cédille sous le c devant o : leçon."],
+["mots","Iron Man s'envole par la ___.",["fenêtre","fenètre","fenetre","fenaître"],"fenêtre","Fenêtre : accent circonflexe sur le ê."],
+["mots","Hulk se cogne la ___.",["tête","tète","tete","têtte"],"tête","Tête : accent circonflexe sur le premier e."],
+["mots","Les Avengers reviendront ___.",["bientôt","bientot","bientô","biantôt"],"bientôt","Bientôt : ô et un t muet."],
+["mots","Thor marche dans la ___.",["forêt","foret","forèt","forrêt"],"forêt","Forêt : le ê remplace un ancien s (on le retrouve dans « forestier »)."],
+["mots","Bruce Banner va à l'___.",["hôpital","hopital","hôpitale","opital"],"hôpital","Hôpital : h muet et ô (on retrouve le s dans « hospitaliser »)."],
+["mots","Spider-Man a eu un ___ de moto.",["accident","acident","accidant","aksident"],"accident","Accident : deux c, et -ent à la fin."],
+["mots","Thor veut ___ Loki.",["appeler","apeler","appeller","apeller"],"appeler","Appeler : deux p, un seul l (mais j'appelle)."],
+["mots","Le film va ___.",["commencer","comencer","commancer","comenser"],"commencer","Commencer : deux m, et « en »."],
+["mots","Les héros ___ à la tour.",["arrivent","arivent","arrivents"],"arrivent","Arriver : deux r."],
+["mots","Rocket coupe la corde avec des ___.",["ciseaux","sizeaux","ciseau","cisaux"],"ciseaux","Ciseaux : c au début, -eaux au pluriel."],
+["mots","Thor regarde le ___ étoilé.",["ciel","ciell","sciel","cièl"],"ciel","Ciel : c (« s » devant i), un seul l."],
+["mots","Iron Man travaille ___ la nuit.",["pendant","pendent","pandant","pandent"],"pendant","Pendant : « en » puis « an »."],
+["mots","Spider-Man saute, ___ il se cache.",["puis","pui","puit","puie"],"puis","Puis finit par un s muet."],
+["mots","Les Avengers sauvent le ___.",["monde","mond","monnde"],"monde","Monde : un e à la fin."],
+["mots","Black Widow est une ___ espionne.",["excellente","exellente","éxcellente","excelente"],"excellente","Excellente : « exc », deux l."],
+["mots","Il fait très ___ à Asgard.",["froid","froit","froi","frois"],"froid","Froid : d muet (on l'entend dans « froide »)."],
+["mots","Le ___ de Hulk fait trembler le sol.",["bruit","brui","bruie","bruis"],"bruit","Bruit : t muet (on l'entend dans « bruitage »)."],
+["mots","Captain America est très ___.",["gentil","gentile","jantil","gentill"],"gentil","Gentil : g (« j » devant e) et un seul l au masculin."]
+];
+const ITEMS=B.map((x,i)=>({id:i,t:x[0],q:x[1],c:x[2],a:x[3],tip:x[4]}));
+const THEMES=Object.keys(RULES);
+const LEVELS=[[0,"Recrue"],[300,"Agent du S.H.I.E.L.D."],[800,"Vengeur"],[1500,"Gardien de la Galaxie"],[2500,"Héros du Wakanda"],[4000,"Légende d'Asgard"]];
+
+/* ---------- état (gardé dans le téléphone) ---------- */
+const KEY="plume_v1";
+const today=()=>new Date().toLocaleDateString("fr-CA");
+const fresh=()=>({name:"",pts:0,total:0,day:"",dayPts:0,streakDays:0,lastDay:"",box:{},stat:{},errs:[],hist:[],pin:"",rate:15,cap:200});
+let S;
+try{S=Object.assign(fresh(),JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){S=fresh()}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const $=id=>document.getElementById(id);
+const show=id=>{for(const s of["hello","home","quiz","end","shop","parent"])$(s).classList.toggle("hidden",s!==id);window.scrollTo(0,0)};
+const rollDay=()=>{const t=today();if(S.day!==t){S.day=t;S.dayPts=0}};
+
+/* ---------- accueil ---------- */
+const level=()=>{let n=LEVELS[0][1];for(const[p,l]of LEVELS)if(S.total>=p)n=l;return n};
+const rate=t=>{const s=S.stat[t];return s&&s.n?s.ok/s.n:null};
+function renderHome(){
+  rollDay();
+  $("w-pts").textContent=S.pts;$("h-lvl").textContent=level();
+  $("h-hello").textContent=S.name?`Salut ${S.name} !`:"Salut !";
+  $("s-days").textContent=S.streakDays;$("s-today").textContent=S.dayPts;
+  $("s-min").textContent=Math.floor(S.pts/100*S.rate);
+  $("h-cap").textContent=S.dayPts>=S.cap?`Plafond du jour atteint (${S.cap} pts) : tu peux continuer à t'entraîner, les points reviennent demain.`:`Encore ${S.cap-S.dayPts} pts possibles aujourd'hui.`;
+  $("themes").innerHTML=THEMES.map(t=>{const r=rate(t);return`<button class="theme" data-t="${t}"><b>${RULES[t][0]}</b><span class="muted">${r==null?"pas encore joué":Math.round(r*100)+" % de réussite"}</span><div class="bar"><i style="width:${r==null?0:Math.round(r*100)}%"></i></div></button>`}).join("");
+}
+
+/* ---------- choix des questions : priorité aux erreurs et aux thèmes fragiles ---------- */
+function pick(theme){
+  const pool=ITEMS.filter(x=>!theme||x.t===theme);
+  const w=x=>{const b=S.box[x.id]??-1;const r=rate(x.t);return(b<0?3:[6,3,1.5,0.7,0.3][Math.min(b,4)])*(r==null?1.2:1.6-r)};
+  const out=[],used=new Set();
+  while(out.length<Math.min(10,pool.length)){
+    let tot=0;const c=pool.filter(x=>!used.has(x.id));c.forEach(x=>tot+=w(x));
+    let r=Math.random()*tot;for(const x of c){r-=w(x);if(r<=0){out.push(x);used.add(x.id);break}}
+  }
+  return out;
+}
+
+/* ---------- partie ---------- */
+let G=null;
+function start(theme){rollDay();G={theme,list:pick(theme),i:0,gain:0,run:0,okCount:0,errs:[],retry:new Set()};show("quiz");ask()}
+function ask(){
+  const x=G.list[G.i];
+  $("q-theme").textContent=RULES[x.t][0];$("q-count").textContent=`${G.i+1} / ${G.list.length}`;
+  $("q-prog").style.width=(G.i/G.list.length*100)+"%";
+  $("q-sentence").innerHTML=x.q.replace("___",'<span class="gap" id="gap">?</span>');
+  const ch=[...x.c].sort(()=>Math.random()-.5);
+  $("q-choices").innerHTML=ch.map(c=>`<button class="choice">${c}</button>`).join("");
+  $("q-explain").innerHTML="";$("q-next").classList.add("hidden");
+}
+function answer(btn){
+  const x=G.list[G.i];if($("q-next").classList.contains("hidden")===false)return;
+  const good=btn.textContent===x.a;
+  for(const b of $("q-choices").children){b.disabled=true;if(b.textContent===x.a)b.classList.add("ok")}
+  $("gap").textContent=x.a;
+  const st=S.stat[x.t]||(S.stat[x.t]={n:0,ok:0});st.n++;
+  if(good){
+    st.ok++;S.box[x.id]=Math.min((S.box[x.id]??0)+1,4);
+    const first=!G.retry.has(x.id);let g=first?10:0;G.run++;G.okCount++;
+    if(first&&G.run%5===0)g+=5;
+    g=Math.max(0,Math.min(g,S.cap-S.dayPts));
+    if(g>0){S.pts+=g;S.total+=g;S.dayPts+=g;G.gain+=g;popup("+"+g)}
+    $("q-explain").innerHTML=`<div class="explain good"><b>Bien joué !</b>${x.tip}</div>`;
+  }else{
+    btn.classList.add("ko");S.box[x.id]=0;G.run=0;
+    G.errs.push(x);S.errs.unshift({q:x.q.replace("___","["+x.a+"]"),r:btn.textContent,d:today()});S.errs=S.errs.slice(0,30);
+    if(!G.retry.has(x.id)){G.retry.add(x.id);G.list.push(x)}
+    $("q-explain").innerHTML=`<div class="explain bad"><b>Pas tout à fait : c'était « ${x.a} ».</b>${x.tip}<br><span class="muted">Règle — ${RULES[x.t][1]}</span><br><span class="muted">Cette question reviendra en fin de série.</span></div>`;
+  }
+  save();$("w-pts").textContent=S.pts;$("q-next").classList.remove("hidden");$("q-next").focus();
+}
+function next(){G.i++;if(G.i<G.list.length)ask();else finish()}
+function finish(){
+  if(G.retry.size===0){const b=Math.max(0,Math.min(20,S.cap-S.dayPts));S.pts+=b;S.total+=b;S.dayPts+=b;G.gain+=b}
+  const t=today();if(S.lastDay!==t){const y=new Date();y.setDate(y.getDate()-1);S.streakDays=S.lastDay===y.toLocaleDateString("fr-CA")?S.streakDays+1:1;S.lastDay=t}
+  save();show("end");
+  const perfect=G.retry.size===0;
+  const nm=S.name?", "+S.name:"";
+  $("e-stamp").textContent=perfect?"Sans-faute !":G.retry.size<=2?"Très bien !":"Continue !";
+  $("e-pts").textContent="+"+G.gain+" pts";
+  $("e-txt").textContent=perfect?`Digne de Thor${nm} : bonus de 20 points pour le sans-faute !`:G.retry.size<=2?`Niveau Avenger${nm} ! ${G.retry.size} erreur(s), elles reviendront pour que tu les maîtrises.`:`Même Hulk s'entraîne${nm}. ${G.retry.size} erreurs : elles reviendront plus souvent pour que tu les maîtrises.`;
+  $("e-errs").innerHTML=G.errs.length?"<h3 style='margin:10px 0 6px'>À retenir</h3>"+[...new Map(G.errs.map(x=>[x.id,x])).values()].map(x=>`<p style="margin:6px 0"><b>${x.q.replace("___",x.a)}</b><br><span class="muted">${x.tip}</span></p>`).join(""):"";
+  $("w-pts").textContent=S.pts;
+}
+function popup(t){const p=$("pop");p.textContent=t;p.classList.remove("go");void p.offsetWidth;p.classList.add("go")}
+
+/* ---------- boutique ---------- */
+function renderShop(){
+  $("sh-rate").textContent=`100 points = ${S.rate} minutes de console.`;
+  $("sh-bal").textContent=`${S.pts} pts = ${Math.floor(S.pts/100*S.rate)} min`;
+  $("sh-msg").textContent=S.pin?"":"Un parent doit d'abord créer son code dans l'Espace parent.";
+  $("sh-hist").innerHTML=S.hist.length?S.hist.slice(0,10).map(h=>`<tr><td>${h.d}</td><td class="n">−${h.p} pts</td><td class="n">${h.m} min</td></tr>`).join(""):"<tr><td class='muted'>Aucun échange pour l'instant.</td></tr>";
+}
+function exchange(){
+  const msg=$("sh-msg");
+  if(!S.pin){msg.textContent="Un parent doit d'abord créer son code dans l'Espace parent.";return}
+  if($("sh-pin").value!==S.pin){msg.textContent="Code incorrect.";return}
+  if(S.pts<100){msg.textContent="Il faut au moins 100 points.";return}
+  const p=Math.floor(S.pts/100)*100,m=p/100*S.rate;S.pts-=p;
+  S.hist.unshift({d:new Date().toLocaleString("fr-FR",{dateStyle:"short",timeStyle:"short"}),p,m});save();
+  $("sh-pin").value="";renderShop();$("w-pts").textContent=S.pts;msg.textContent=`Validé : ${m} minutes de console !`;
+}
+
+/* ---------- espace parent ---------- */
+function renderParentLock(){$("p-body").classList.add("hidden");$("p-lock").classList.remove("hidden");$("p-pin").value="";$("p-msg").textContent="";
+  $("p-first").textContent=S.pin?"":"Première visite : choisis un code de 4 à 6 chiffres. Il servira à valider les échanges de points.";
+  $("p-open").textContent=S.pin?"Entrer":"Créer le code"}
+function openParent(){
+  const v=$("p-pin").value;
+  if(!S.pin){if(!/^\d{4,6}$/.test(v)){$("p-msg").textContent="4 à 6 chiffres.";return}S.pin=v;save()}
+  else if(v!==S.pin){$("p-msg").textContent="Code incorrect.";return}
+  $("p-lock").classList.add("hidden");$("p-body").classList.remove("hidden");
+  $("p-themes").innerHTML="<tr><th>Thème</th><th class='n'>Réussite</th><th class='n'>Questions</th></tr>"+THEMES.map(t=>{const s=S.stat[t];return`<tr><td>${RULES[t][0]}</td><td class="n">${s&&s.n?Math.round(s.ok/s.n*100)+" %":"—"}</td><td class="n">${s?s.n:0}</td></tr>`}).join("");
+  $("p-errs").innerHTML=S.errs.length?S.errs.slice(0,15).map(e=>`<p style="margin:4px 0">${e.d} — ${e.q} <span style="color:var(--bad)">(a répondu « ${e.r} »)</span></p>`).join(""):"Aucune erreur enregistrée.";
+  $("p-rate").value=S.rate;$("p-name").value=S.name||"";$("p-cap").value=S.cap;$("p-newpin").value="";$("p-saved").textContent="";$("p-code").classList.add("hidden");
+}
+function saveParent(){
+  const r=+$("p-rate").value,c=+$("p-cap").value,np=$("p-newpin").value;
+  if(r>0)S.rate=r;if(c>=10)S.cap=c;S.name=$("p-name").value.trim();
+  if(np){if(!/^\d{4,6}$/.test(np)){$("p-saved").textContent="Le code doit faire 4 à 6 chiffres.";return}S.pin=np}
+  save();$("p-saved").textContent="Enregistré.";
+}
+
+/* ---------- événements ---------- */
+$("go-mix").onclick=()=>start(null);
+$("themes").onclick=e=>{const b=e.target.closest(".theme");if(b)start(b.dataset.t)};
+$("q-choices").onclick=e=>{const b=e.target.closest(".choice");if(b&&!b.disabled)answer(b)};
+$("q-next").onclick=next;
+$("q-quit").onclick=()=>{renderHome();show("home")};
+$("e-again").onclick=()=>start(G.theme);
+$("e-home").onclick=()=>{renderHome();show("home")};
+$("go-shop").onclick=()=>{renderShop();show("shop")};
+$("sh-do").onclick=exchange;
+$("go-parent").onclick=()=>{renderParentLock();show("parent")};
+$("p-open").onclick=openParent;
+$("p-save").onclick=saveParent;
+$("p-export").onclick=()=>{const t=$("p-code");t.value=btoa(unescape(encodeURIComponent(JSON.stringify(S))));t.classList.remove("hidden");t.select()};
+$("p-doimport").onclick=()=>{try{const o=JSON.parse(decodeURIComponent(escape(atob($("p-import").value.trim()))));S=Object.assign(fresh(),o);save();$("p-imsg").textContent="Progression restaurée.";renderHome()}catch(e){$("p-imsg").textContent="Code invalide."}};
+document.querySelectorAll("[data-home]").forEach(b=>b.onclick=()=>{renderHome();show("home")});
+$("hl-go").onclick=()=>{const n=$("hl-name").value.trim();if(!n){$("hl-name").focus();return}S.name=n;save();renderHome();show("home")};
+renderHome();
+if(!S.name)show("hello");
+}
+</script>
+</body>
+</html>
