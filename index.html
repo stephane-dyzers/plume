@@ -101,6 +101,10 @@ table{width:100%;border-collapse:collapse;font-size:15px}td,th{padding:6px 4px;b
 .hp.win i{background:var(--green)}
 #q-boss{margin:-6px 0 12px;font-size:14px}#q-boss .hp{height:10px;margin:2px 0 0}
 .ess{margin:8px 0 0;padding-left:20px}.ess li{margin:4px 0}
+.stepper{display:grid;grid-template-columns:64px 1fr 64px;gap:10px;align-items:center;margin:6px 0 4px}
+.stepper .btn{font-size:30px;padding:0}
+.stepper .amt{text-align:center;background:light-dark(#f2f6ff,#1c2c4a);border-radius:14px;padding:6px}
+.stepper .amt b{display:block;font:800 30px "Baloo 2",system-ui,sans-serif;color:var(--blue)}
 .lvl{display:inline-block;background:var(--blue);color:#fff;border-radius:999px;padding:2px 10px;font-weight:800;font-size:13px}
 textarea{width:100%;min-height:90px;font:14px monospace;border-radius:12px;border:2px solid var(--line);background:var(--paper);color:var(--ink);padding:8px}
 </style>
@@ -220,6 +224,9 @@ textarea{width:100%;min-height:90px;font:14px monospace;border-radius:12px;borde
       <h2 style="font-size:26px">Temps de console</h2>
       <p id="sh-rate"></p>
       <p class="big" style="font-size:34px;color:var(--blue)" id="sh-bal"></p>
+      <label>Combien de points veux-tu échanger&nbsp;?</label>
+      <div class="stepper"><button class="btn ghost" id="sh-minus" aria-label="100 points de moins">−</button><div class="amt" aria-live="polite"><b id="sh-amt">100 pts</b><span id="sh-amin"></span></div><button class="btn ghost" id="sh-plus" aria-label="100 points de plus">+</button></div>
+      <button class="btn ghost full" id="sh-all" style="min-height:42px;font-size:16px">Tout échanger</button>
       <p class="muted">L'échange se valide avec le code d'un parent.</p>
       <label for="sh-pin">Code parent</label>
       <input id="sh-pin" type="password" inputmode="numeric" maxlength="6" autocomplete="off">
@@ -252,8 +259,15 @@ textarea{width:100%;min-height:90px;font:14px monospace;border-radius:12px;borde
         <div id="p-errs" class="muted"></div>
       </div>
       <div class="page">
+        <h2 style="font-size:24px">Taux de conversion</h2>
+        <label for="p-rate">Minutes de console pour 100 points</label><input id="p-rate" type="number" inputmode="numeric" min="1" max="120" step="1">
+        <p id="p-ratepv" style="margin:8px 0 0"></p>
+        <div class="row" style="margin-top:12px"><button class="btn" id="p-ratesave" style="flex:2">Enregistrer le taux</button><button class="btn ghost" id="p-ratedef" style="flex:1">Défaut (15)</button></div>
+        <p class="muted" style="margin:8px 0 0">Le nouveau taux s'applique aux prochains échanges, et donc aussi aux points déjà gagnés. Les échanges passés ne changent pas.</p>
+        <p id="p-ratemsg" style="font-weight:800"></p>
+      </div>
+      <div class="page">
         <h2 style="font-size:24px">Réglages</h2>
-        <label for="p-rate">Minutes de console pour 100 points</label><input id="p-rate" type="number" min="1" max="120">
         <label for="p-name">Prénom affiché</label><input id="p-name" maxlength="20">
         <label for="p-newpin">Nouveau code parent (4 à 6 chiffres, laisser vide pour garder)</label><input id="p-newpin" type="password" inputmode="numeric" maxlength="6">
         <button class="btn full" id="p-save" style="margin-top:12px">Enregistrer</button>
@@ -382,7 +396,7 @@ function renderHome(){
   const nx=nextLevel();$("h-next").textContent=nx?`Encore ${nx[0]-S.total} point${nx[0]-S.total>1?"s":""} pour devenir ${nx[1]}${nx[1].endsWith(".")?"":"."}`:"Tu as atteint le plus haut statut !";
   $("h-hello").textContent=S.name?`Salut ${S.name} !`:"Salut !";
   $("s-days").textContent=S.streakDays;$("s-today").textContent=S.dayPts;
-  $("s-min").textContent=Math.floor(S.pts/100*S.rate);
+  $("s-min").textContent=Math.floor(S.pts/100)*S.rate;
   const nr=toReview().length;$("go-mix").textContent=nr?`Réviser mes erreurs (${nr})`:"Réviser mes erreurs";$("go-mix").disabled=!nr;
   const gh=$("go-hist");gh.classList.toggle("hidden",!XTH.length);
   if(XTH.length){const t=XTH[0];gh.dataset.t=t;
@@ -529,9 +543,16 @@ function showPrize(){
 function popup(t){const p=$("pop");p.textContent=t;p.classList.remove("go");void p.offsetWidth;p.classList.add("go")}
 
 /* ---------- boutique ---------- */
+let shAmt=100;
+const shMax=()=>Math.floor(S.pts/100)*100;
+function renderAmt(){const mx=shMax();shAmt=mx?Math.min(Math.max(100,shAmt),mx):0;
+  $("sh-amt").textContent=shAmt?`${shAmt} pts`:"0 pt";$("sh-amin").textContent=`= ${shAmt/100*S.rate} min`;
+  $("sh-minus").disabled=shAmt<=100;$("sh-plus").disabled=shAmt>=mx;$("sh-all").disabled=!mx||shAmt>=mx;
+  $("sh-do").disabled=!mx;$("sh-do").textContent=mx?`Échanger ${shAmt} pts contre ${shAmt/100*S.rate} min`:"Il faut au moins 100 points"}
 function renderShop(){
   $("sh-rate").textContent=`100 points = ${S.rate} minutes de console.`;
-  $("sh-bal").textContent=`${S.pts} pts = ${Math.floor(S.pts/100*S.rate)} min`;
+  $("sh-bal").textContent=`${S.pts} pts = ${Math.floor(S.pts/100)*S.rate} min`;
+  shAmt=100;renderAmt();
   $("sh-msg").textContent=S.pin?"":"Un parent doit d'abord créer son code dans l'Espace parent.";
   $("sh-hist").innerHTML=S.hist.length?S.hist.slice(0,10).map(h=>`<tr><td>${h.d}</td><td class="n">−${h.p} pts</td><td class="n">${h.m} min</td></tr>`).join(""):"<tr><td class='muted'>Aucun échange pour l'instant.</td></tr>";
 }
@@ -540,7 +561,8 @@ function exchange(){
   if(!S.pin){msg.textContent="Un parent doit d'abord créer son code dans l'Espace parent.";return}
   if($("sh-pin").value!==S.pin){msg.textContent="Code incorrect.";return}
   if(S.pts<100){msg.textContent="Il faut au moins 100 points.";return}
-  const p=Math.floor(S.pts/100)*100,m=p/100*S.rate;S.pts-=p;
+  if(shAmt<100||shAmt>shMax()){renderAmt();msg.textContent="Choisis le nombre de points.";return}
+  const p=shAmt,m=p/100*S.rate;S.pts-=p;
   S.hist.unshift({d:new Date().toLocaleString("fr-FR",{dateStyle:"short",timeStyle:"short"}),p,m});save();
   $("sh-pin").value="";renderShop();$("w-pts").textContent=S.pts;msg.textContent=`Validé : ${m} minutes de console !`;
 }
@@ -558,11 +580,15 @@ function openParent(){
   const done=MAIN.filter(z=>perfect(z.id)).length;$("p-prize").textContent=S.prize?`Jeu terminé le ${S.prize} : récompense de 5 € annoncée à l'enfant.`:`Séries gagnées : ${done} / ${MAIN.length}. Récompense secrète (5 €) quand tout sera gagné — elle n'est pas affichée côté enfant.`;
   $("p-reset").textContent="Tout effacer";$("p-rmsg").textContent="";resetArm=false;
   $("p-errs").innerHTML=S.errs.length?S.errs.slice(0,15).map(e=>`<p style="margin:4px 0">${e.d} — ${e.q} <span style="color:var(--bad)">(a répondu « ${e.r} »)</span></p>`).join(""):"Aucune erreur enregistrée.";
-  $("p-rate").value=S.rate;$("p-name").value=S.name||"";$("p-newpin").value="";$("p-saved").textContent="";$("p-code").classList.add("hidden");
+  $("p-rate").value=S.rate;ratePreview();$("p-ratemsg").textContent="";$("p-name").value=S.name||"";$("p-newpin").value="";$("p-saved").textContent="";$("p-code").classList.add("hidden");
 }
+const RATE_DEF=15;
+const rateOk=r=>Number.isInteger(r)&&r>=1&&r<=120;
+function ratePreview(){const r=+$("p-rate").value;$("p-ratepv").innerHTML=rateOk(r)?`<b>100 points = ${r} min</b> · solde actuel : ${S.pts} pts = ${Math.floor(S.pts/100)*r} min`:`<span style="color:var(--bad)">Un nombre entier de minutes, entre 1 et 120.</span>`}
+function saveRate(){const r=+$("p-rate").value;if(!rateOk(r)){ratePreview();return}S.rate=r;save();$("p-ratemsg").textContent=`Taux enregistré : 100 points = ${r} min.`;$("w-pts").textContent=S.pts}
 function saveParent(){
-  const r=+$("p-rate").value,np=$("p-newpin").value;
-  if(r>0)S.rate=r;S.name=$("p-name").value.trim();
+  const np=$("p-newpin").value;
+  S.name=$("p-name").value.trim();
   if(np){if(!/^\d{4,6}$/.test(np)){$("p-saved").textContent="Le code doit faire 4 à 6 chiffres.";return}S.pin=np}
   save();$("p-saved").textContent="Enregistré.";
 }
@@ -584,9 +610,15 @@ $("e-again").onclick=()=>{if(G.theme)openTheme(G.theme);else{renderHome();show("
 $("e-home").onclick=()=>{renderHome();show("home")};
 $("go-shop").onclick=()=>{renderShop();show("shop")};
 $("sh-do").onclick=exchange;
+$("sh-minus").onclick=()=>{shAmt-=100;renderAmt()};
+$("sh-plus").onclick=()=>{shAmt+=100;renderAmt()};
+$("sh-all").onclick=()=>{shAmt=shMax();renderAmt()};
 $("go-parent").onclick=()=>{renderParentLock();show("parent")};
 $("p-open").onclick=openParent;
 $("p-save").onclick=saveParent;
+$("p-rate").oninput=()=>{ratePreview();$("p-ratemsg").textContent=""};
+$("p-ratesave").onclick=saveRate;
+$("p-ratedef").onclick=()=>{$("p-rate").value=RATE_DEF;saveRate()};
 let resetArm=false;
 $("p-reset").onclick=()=>{if(!resetArm){resetArm=true;$("p-reset").textContent="Confirmer : tout effacer";$("p-rmsg").textContent="Points, progression, prénom et code parent seront effacés. Appuie à nouveau pour confirmer.";return}
   try{localStorage.removeItem(KEY)}catch(e){}S=fresh();resetArm=false;G=null;$("hl-name").value="";show("hello")};
