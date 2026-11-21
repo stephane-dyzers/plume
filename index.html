@@ -74,12 +74,17 @@ table{width:100%;border-collapse:collapse;font-size:15px}td,th{padding:6px 4px;b
 #prize{position:fixed;inset:0;background:rgba(10,20,40,.72);display:grid;place-items:center;padding:16px;z-index:10;overflow:hidden}
 #prize.hidden{display:none}
 .pz-card{position:relative;background:var(--paper);border-radius:22px;padding:24px 20px;text-align:center;max-width:420px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.4);animation:pzin .7s cubic-bezier(.2,1.4,.4,1)}
+.endgame{font:800 clamp(40px,13vw,72px)/1 "Baloo 2",system-ui,sans-serif;letter-spacing:.02em;margin:4px 0 12px;
+ background:linear-gradient(180deg,#ffe27a,#ffc83d 45%,#e0a600);-webkit-background-clip:text;background-clip:text;color:transparent;
+ -webkit-text-stroke:2px #7a1e17;filter:drop-shadow(0 4px 0 #b3261e);animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.04)}}
+.pz-big{font:800 21px/1.25 "Baloo 2",system-ui,sans-serif;margin:8px 0}
 .pz-gift{font:800 26px "Baloo 2",system-ui,sans-serif;background:var(--yellow);color:#4a3200;border-radius:16px;padding:10px;margin:14px 0}
 #confetti{position:absolute;inset:0;pointer-events:none}
 #confetti i{position:absolute;top:-20px;width:10px;height:16px;border-radius:2px;animation:fall linear infinite}
 @keyframes fall{to{top:110%;transform:rotate(720deg)}}
 @keyframes pzin{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
-@media(prefers-reduced-motion:reduce){#confetti{display:none}.pz-card{animation:none}}
+@media(prefers-reduced-motion:reduce){#confetti{display:none}.pz-card,.endgame{animation:none}}
 .sgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}
 .serie{background:var(--paper);border:2px solid var(--blue);border-radius:14px;padding:10px;min-height:58px;font:inherit;color:var(--ink);cursor:pointer;text-align:left}
 .serie b{display:block;font:800 17px "Baloo 2",system-ui,sans-serif;color:var(--blue)}
@@ -101,6 +106,7 @@ textarea{width:100%;min-height:90px;font:14px monospace;border-radius:12px;borde
   <section id="home">
     <div class="page">
       <h2 style="font-size:28px" id="h-hello">Salut&nbsp;!</h2><p style="margin:4px 0 0"><span id="h-lvl" class="lvl"></span></p>
+      <p class="muted" id="h-next" style="margin:4px 0 0"></p>
       <p style="margin:6px 0 10px">Choisis un thème, puis une série de 10 questions. Vise le 10/10 pour gagner la série et débloquer le niveau suivant&nbsp;!</p>
       <button class="btn ghost full" id="go-rules" style="margin-bottom:10px">Comment gagner des points&nbsp;?</button>
       <button class="btn full" id="go-mix">Réviser mes erreurs</button>
@@ -147,6 +153,9 @@ textarea{width:100%;min-height:90px;font:14px monospace;border-radius:12px;borde
         <li>Le niveau suivant s'ouvre quand <b>toutes les séries</b> du niveau d'avant sont gagnées.</li>
         <li>Une erreur&nbsp;? La question revient en fin de série, et tu la retrouves dans «&nbsp;Réviser mes erreurs&nbsp;».</li>
       </ul>
+      <h3 style="margin:14px 0 4px">Les statuts</h3>
+      <p style="margin:0 0 4px">Ton statut monte avec tous les points que tu as gagnés depuis le début (même ceux échangés contre de la console) :</p>
+      <table id="r-levels"></table>
       <h3 style="margin:14px 0 4px">Le temps de console</h3>
       <ul class="rules">
         <li id="r-rate"></li>
@@ -261,11 +270,10 @@ textarea{width:100%;min-height:90px;font:14px monospace;border-radius:12px;borde
 <div id="prize" class="hidden" role="dialog" aria-modal="true" aria-labelledby="pz-title">
   <div id="confetti" aria-hidden="true"></div>
   <div class="pz-card">
-    <div class="stamp" style="font-size:30px">Légende d'Asgard</div>
-    <h2 id="pz-title" style="font-size:30px;color:var(--blue)">Tu as terminé Plume, <span id="pz-name"></span>&nbsp;!</h2>
-    <p style="font-size:18px">Toutes les séries de tous les thèmes sont gagnées. Même Thor n'en revient pas.</p>
-    <p class="pz-gift">🎁 Pour te récompenser, on t'offre <b>5&nbsp;€</b>&nbsp;!</p>
-    <p class="muted">Montre cet écran à tes parents.</p>
+    <h1 id="pz-title" class="endgame">ENDGAME</h1>
+    <p class="pz-big">Plus fort que Thanos et Iron Man réunis, <span id="pz-name"></span>&nbsp;!</p>
+    <p class="pz-gift">Tu as fini le jeu et gagné <b>5&nbsp;€</b>&nbsp;!</p>
+    <p class="pz-big" style="color:var(--red)">Montre vite ça à tes parents&nbsp;!!!</p>
     <button class="btn y full" id="pz-close">Génial&nbsp;!</button>
   </div>
 </div>
@@ -321,10 +329,12 @@ const toReview=t=>ITEMS.filter(x=>(!t||x.t===t)&&S.box[x.id]!=null&&S.box[x.id]<
 
 /* ---------- accueil ---------- */
 const level=()=>{let n=LEVELS[0][1];for(const[p,l]of LEVELS)if(S.total>=p)n=l;return n};
+const nextLevel=()=>LEVELS.find(([p])=>S.total<p);
 const rate=t=>{const s=S.stat[t];return s&&s.n?s.ok/s.n:null};
 function renderHome(){
   rollDay();
   $("w-pts").textContent=S.pts;$("h-lvl").textContent=level();
+  const nx=nextLevel();$("h-next").textContent=nx?`Encore ${nx[0]-S.total} point${nx[0]-S.total>1?"s":""} pour devenir ${nx[1]}${nx[1].endsWith(".")?"":"."}`:"Tu as atteint le plus haut statut !";
   $("h-hello").textContent=S.name?`Salut ${S.name} !`:"Salut !";
   $("s-days").textContent=S.streakDays;$("s-today").textContent=S.dayPts;
   $("s-min").textContent=Math.floor(S.pts/100*S.rate);
@@ -420,7 +430,7 @@ function finish(){
 }
 function showPrize(){
   const o=$("prize");o.classList.remove("hidden");
-  $("pz-name").textContent=S.name?S.name:"champion";
+  $("pz-name").textContent=S.name?S.name:"champion";$("prize").classList.add("show");
   const c=$("confetti");c.innerHTML="";
   const col=["#ffc83d","#e2453c","#1f4e9c","#1d8a4e","#7fa8ff","#ff7ac8"];
   for(let i=0;i<90;i++){const d=document.createElement("i");d.style.left=Math.random()*100+"%";d.style.background=col[i%col.length];
@@ -469,7 +479,7 @@ function saveParent(){
 
 /* ---------- événements ---------- */
 $("go-mix").onclick=()=>startReview(null);
-$("go-rules").onclick=()=>{$("r-rate").innerHTML=`<b>100 points = ${S.rate} minutes</b> de console.`;show("rules")};
+$("go-rules").onclick=()=>{const cur=level();$("r-levels").innerHTML=LEVELS.map(([p,l])=>`<tr${l===cur?' style="font-weight:800;color:var(--blue)"':''}><td>${l}${l===cur?" ← toi":""}</td><td class="n">${p?p+" pts":"au départ"}</td></tr>`).join("");$("r-rate").innerHTML=`<b>100 points = ${S.rate} minutes</b> de console.`;show("rules")};
 $("pz-close").onclick=()=>{$("prize").classList.add("hidden");$("confetti").innerHTML=""};
 $("themes").onclick=e=>{const b=e.target.closest(".theme");if(b)openTheme(b.dataset.t)};
 $("t-levels").onclick=e=>{const b=e.target.closest(".serie");if(b&&!b.disabled)startSeries(b.dataset.s)};
