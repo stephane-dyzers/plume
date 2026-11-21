@@ -368,11 +368,20 @@ const LEVELS=[[0,"Recrue"],[300,"Agent du S.H.I.E.L.D."],[800,"Vengeur"],[1500,"
 /* ---------- état (gardé dans le téléphone) ---------- */
 const KEY="plume_v1";
 const today=()=>new Date().toLocaleDateString("fr-CA");
-const fresh=()=>({ver:2,prize:"",name:"",pts:0,total:0,day:"",dayPts:0,streakDays:0,lastDay:"",box:{},stat:{},ser:{},xhit:{},xwon:{},errs:[],hist:[],pin:"",rate:15,cap:200});
+const fresh=()=>({ver:2,rev:0,prize:"",name:"",pts:0,total:0,day:"",dayPts:0,streakDays:0,lastDay:"",box:{},stat:{},ser:{},xhit:{},xwon:{},errs:[],hist:[],pin:"",rate:15,cap:200});
+/* Une seule vérité : le stockage du téléphone. Si une autre copie de Plume (vieil onglet, appli restée en arrière-plan)
+   a écrit entre-temps, on recharge ses données au lieu de les écraser (sinon un échange de points pouvait être annulé). */
 let S;
-try{S=Object.assign(fresh(),JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){S=fresh()}
-if(S.ver!==2){S.ver=2;S.box={};S.ser={}}
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const stored=()=>{try{return JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){return{}}};
+function load(){S=Object.assign(fresh(),stored());if(S.ver!==2){S.ver=2;S.box={};S.ser={}}if(typeof S.rev!=="number")S.rev=0}
+load();
+function save(force){try{const st=stored();
+  if(!force&&(st.rev||0)>S.rev){load();refreshScreen();return false}
+  S.rev=Math.max(S.rev,st.rev||0)+1;localStorage.setItem(KEY,JSON.stringify(S));return true}catch(e){return false}}
+function resync(){if(document.visibilityState==="hidden")return;if((stored().rev||0)!==S.rev){load();refreshScreen()}}
+function refreshScreen(){const vis=["home","theme","shop","parent","end","rules"].find(id=>!$(id).classList.contains("hidden"));
+  $("w-pts").textContent=S.pts;
+  if(vis==="theme"&&curTheme)openTheme(curTheme);else if(vis==="shop")renderShop();else if(vis==="parent")renderParentLock();else if(vis!=="quiz"&&vis!=="hello"&&vis!=="rules"){renderHome();show("home")}}
 const $=id=>document.getElementById(id);
 const show=id=>{for(const s of["hello","home","rules","theme","quiz","end","shop","parent"])$(s).classList.toggle("hidden",s!==id);window.scrollTo(0,0)};
 const rollDay=()=>{const t=today();if(S.day!==t){S.day=t;S.dayPts=0}};
@@ -557,13 +566,13 @@ function renderShop(){
   $("sh-hist").innerHTML=S.hist.length?S.hist.slice(0,10).map(h=>`<tr><td>${h.d}</td><td class="n">−${h.p} pts</td><td class="n">${h.m} min</td></tr>`).join(""):"<tr><td class='muted'>Aucun échange pour l'instant.</td></tr>";
 }
 function exchange(){
-  const msg=$("sh-msg");
+  const msg=$("sh-msg");resync();
   if(!S.pin){msg.textContent="Un parent doit d'abord créer son code dans l'Espace parent.";return}
   if($("sh-pin").value!==S.pin){msg.textContent="Code incorrect.";return}
   if(S.pts<100){msg.textContent="Il faut au moins 100 points.";return}
   if(shAmt<100||shAmt>shMax()){renderAmt();msg.textContent="Choisis le nombre de points.";return}
   const p=shAmt,m=p/100*S.rate;S.pts-=p;
-  S.hist.unshift({d:new Date().toLocaleString("fr-FR",{dateStyle:"short",timeStyle:"short"}),p,m});save();
+  S.hist.unshift({d:new Date().toLocaleString("fr-FR",{dateStyle:"short",timeStyle:"short"}),p,m});if(!save()){msg.textContent="Les points ont changé entre-temps : vérifie et recommence.";return}
   $("sh-pin").value="";renderShop();$("w-pts").textContent=S.pts;msg.textContent=`Validé : ${m} minutes de console !`;
 }
 
@@ -623,10 +632,14 @@ let resetArm=false;
 $("p-reset").onclick=()=>{if(!resetArm){resetArm=true;$("p-reset").textContent="Confirmer : tout effacer";$("p-rmsg").textContent="Points, progression, prénom et code parent seront effacés. Appuie à nouveau pour confirmer.";return}
   try{localStorage.removeItem(KEY)}catch(e){}S=fresh();resetArm=false;G=null;$("hl-name").value="";show("hello")};
 $("p-export").onclick=()=>{const t=$("p-code");t.value=btoa(unescape(encodeURIComponent(JSON.stringify(S))));t.classList.remove("hidden");t.select()};
-$("p-doimport").onclick=()=>{try{const o=JSON.parse(decodeURIComponent(escape(atob($("p-import").value.trim()))));S=Object.assign(fresh(),o);if(S.ver!==2){S.ver=2;S.box={};S.ser={}}save();$("p-imsg").textContent="Progression restaurée.";renderHome()}catch(e){$("p-imsg").textContent="Code invalide."}};
+$("p-doimport").onclick=()=>{try{const o=JSON.parse(decodeURIComponent(escape(atob($("p-import").value.trim()))));const rv=S.rev;S=Object.assign(fresh(),o);if(S.ver!==2){S.ver=2;S.box={};S.ser={}}S.rev=Math.max(rv,S.rev||0);save(true);$("p-imsg").textContent="Progression restaurée.";renderHome()}catch(e){$("p-imsg").textContent="Code invalide."}};
 document.querySelectorAll("[data-home]").forEach(b=>b.onclick=()=>{renderHome();show("home")});
 $("hl-go").onclick=()=>{const n=$("hl-name").value.trim();if(!n){$("hl-name").focus();return}S.name=n;save();renderHome();show("home")};
-window.plume={get G(){return G},get S(){return S}};
+document.addEventListener("visibilitychange",resync);
+window.addEventListener("pageshow",resync);
+window.addEventListener("focus",resync);
+window.addEventListener("storage",e=>{if(e.key===KEY)resync()});
+window.plume={get G(){return G},get S(){return S},save};
 renderHome();
 if(!S.name)show("hello");
 }
